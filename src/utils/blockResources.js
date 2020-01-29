@@ -31,4 +31,21 @@ const skippedResources = [
   'tiqcdn'
 ]
 
-export { blockedResourceTypes, skippedResources }
+const blockResources = async (page) => {
+  await page.setRequestInterception(true)
+
+  page.on('request', request => {
+    const requestUrl = request._url.split('?')[0].split('#')[0]
+
+    if (
+      blockedResourceTypes.includes(request.resourceType()) ||
+      skippedResources.some(resource => requestUrl.includes(resource))
+    ) {
+      request.abort()
+    } else {
+      request.continue()
+    }
+  })
+}
+
+export { blockResources }
