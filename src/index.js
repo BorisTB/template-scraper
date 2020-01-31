@@ -17,7 +17,7 @@ const run = async (searchQuery, limit) => {
 
   await cluster.task(indexScraper({ store, cluster }))
 
-  await cluster.queue({ query: searchQuery, limit })
+  cluster.queue({ query: searchQuery, limit })
 
   await cluster.idle();
   await cluster.close();
