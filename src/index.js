@@ -17,10 +17,12 @@ const run = async (searchQuery, limit) => {
 
   await cluster.task(indexScraper({ store, cluster }))
 
-  cluster.queue({ query: searchQuery, limit })
+  await cluster.queue({ query: searchQuery, limit })
 
   await cluster.idle();
   await cluster.close();
+
+  console.log(store.getData())
 }
 
 run('day trip Ohio', 4)

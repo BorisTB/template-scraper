@@ -6,31 +6,36 @@ const indexScraper = ({ store, cluster }) => async ({ page, data: { query, limit
   await blockResources(page)
 
   await page.goto(URL)
-  await page.waitForSelector('body')
+  await page.waitForSelector('h1')
 
-  const items = await page.evaluate(() => {
-    const resultNodes = document.querySelectorAll('.result')
-    const results = Array.from(resultNodes).map(resultNode => {
-      const url = new URL(resultNode.querySelector('[href]').getAttribute('href'), window.location.origin).toString()
+  const indexStoreNode = store.getOrCreateNode(URL)
+
+  const indexContent = await page.evaluate(() => {
+    const title = document.querySelector('h1').innerText.trim()
+    const contentNodes = document.querySelectorAll('p')
+
+    const content = Array.from(contentNodes).map(contentNode => {
+      const linkNode = contentNode.querySelector('[href]')
+      if (linkNode) {
+        return {
+          url: new URL(linkNode.getAttribute('href'), window.location.origin).toString(),
+          text: linkNode.innerText.trim()
+        }
+      }
 
       return {
-        title: resultNode.querySelector('.result-title').innerText.trim(),
-        category: resultNode.querySelector('.thumbnail-overlay-tag').innerText.trim(),
-        url
+        text: contentNode.innerText.trim()
       }
     })
-    return results
+
+    return {
+      title,
+      content
+    }
   })
 
-  items.forEach(item => {
-    const node = store.getOrCreateNode(item.url)
-
-    Object.keys(item).forEach(objKey => {
-      node.setValue(objKey, item[objKey])
-    })
-  })
-
-  console.log(items)
+  indexStoreNode.setValue('title', indexContent.title)
+  indexStoreNode.setValue('content', indexContent.content)
 }
 
 export { indexScraper }
